@@ -1,32 +1,30 @@
-import express from 'express';
-import mongoose from 'mongoose';
-import cors from 'cors';
-import dotenv from 'dotenv';
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import { conectarDB } from "./config/database.js";
+import tourRoutes from "./routes/tourRoutes.js"; // ¡Importar rutas!
 
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-const MONGODB_URI = process.env.MONGODB_URI || '';
 
 // Middlewares
 app.use(cors());
 app.use(express.json());
 
-// Ruta de prueba
-app.get('/', (req, res) => {
-  res.send('API de Tours funcionando correctamente 🚀');
+// Conectar DB
+conectarDB();
+
+// Rutas
+app.get("/", (req, res) => {
+  res.json({ mensaje: "API Sistema de Tours" });
 });
 
-// Conexión a MongoDB
-mongoose.connect(MONGODB_URI)
-  .then(() => {
-    console.log('✅ Conectado a MongoDB Atlas: ToursDB');
-    app.listen(PORT, () => {
-      console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
-    });
-  })
-  .catch((err) => {
-    console.error('❌ Error de conexión:', err);
-    process.exit(1);
-  });
+// Registrar rutas de tours
+app.use("/api/tours", tourRoutes);
+
+// Iniciar servidor
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => {
+  console.log(`Servidor iniciado en puerto ${PORT}`);
+});
