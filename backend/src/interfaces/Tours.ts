@@ -1,0 +1,8 @@
+export interface ITour {
+  _id?: string;
+  nombre: string;
+  destino: string;
+  precio: number;
+  duracion: string;
+  cupos: number;
+}
