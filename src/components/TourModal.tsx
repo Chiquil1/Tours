@@ -6,99 +6,111 @@ interface TourModalProps {
   isOpen: boolean;
   onClose: () => void;
   onRefresh: () => void;
-  tourEditar: Tour | null;
+  tourParaEditar?: Tour | null; // Si hay un tour, es modo edición
 }
 
-const TourModal: React.FC<TourModalProps> = ({ isOpen, onClose, onRefresh, tourEditar }) => {
+const TourModal: React.FC<TourModalProps> = ({ isOpen, onClose, onRefresh, tourParaEditar }) => {
   const [formData, setFormData] = useState({
     nombre: '',
     destino: '',
-    precio: 0,
+    precio: '',
     duracion: '',
-    cupos: 0
+    cupos: ''
   });
 
-  // Llenar el formulario si estamos editando
+  // Cargar datos si estamos editando
   useEffect(() => {
-    if (tourEditar) {
+    if (tourParaEditar) {
       setFormData({
-        nombre: tourEditar.nombre,
-        destino: tourEditar.destino,
-        precio: tourEditar.precio,
-        duracion: tourEditar.duracion,
-        cupos: tourEditar.cupos
+        nombre: tourParaEditar.nombre,
+        destino: tourParaEditar.destino,
+        precio: String(tourParaEditar.precio),
+        duracion: tourParaEditar.duracion,
+        cupos: String(tourParaEditar.cupos)
       });
     } else {
-      // Resetear si es nuevo
-      setFormData({ nombre: '', destino: '', precio: 0, duracion: '', cupos: 0 });
+      // Limpiar formulario si es nuevo
+      setFormData({ nombre: '', destino: '', precio: '', duracion: '', cupos: '' });
     }
-  }, [tourEditar]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      if (tourEditar) {
-        await actualizarTour(tourEditar._id!, formData);
-        alert('Tour actualizado correctamente');
-      } else {
-        await registrarTour(formData);
-        alert('Tour registrado correctamente');
-      }
-      onRefresh();
-      onClose();
-    } catch (error) {
-      alert('Error al guardar el tour');
-      console.error(error);
-    }
-  };
+  }, [tourParaEditar, isOpen]);
 
   if (!isOpen) return null;
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const tourData = {
+      ...formData,
+      precio: Number(formData.precio),
+      cupos: Number(formData.cupos)
+    };
+
+    try {
+      if (tourParaEditar) {
+        // Modo Edición
+        await actualizarTour(tourParaEditar._id!, tourData);
+        alert('Tour actualizado correctamente');
+      } else {
+        // Modo Creación
+        await registrarTour(tourData);
+        alert('Tour registrado correctamente');
+      }
+      
+      onRefresh(); // Recargar la lista
+      onClose();   // Cerrar modal
+    } catch (error) {
+      console.error(error);
+      alert('Error al guardar el tour');
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded w-96 shadow-xl">
-        <h2 className="text-2xl font-bold mb-5">
-          {tourEditar ? 'Editar Tour' : 'Nuevo Tour'}
+      <div className="bg-white p-6 rounded-lg w-full max-w-md shadow-xl">
+        <h2 className="text-2xl font-bold mb-5 text-gray-800">
+          {tourParaEditar ? 'Editar Tour' : 'Nuevo Tour'}
         </h2>
-        <form onSubmit={handleSubmit}>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
           <input 
-            className="border w-full p-2 mb-3 rounded" 
+            className="border w-full p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500" 
             placeholder="Nombre" 
             value={formData.nombre}
-            onChange={e => setFormData({...formData, nombre: e.target.value})}
-            required 
+            onChange={(e) => setFormData({...formData, nombre: e.target.value})}
+            required
           />
           <input 
-            className="border w-full p-2 mb-3 rounded" 
+            className="border w-full p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500" 
             placeholder="Destino" 
             value={formData.destino}
-            onChange={e => setFormData({...formData, destino: e.target.value})}
-            required 
+            onChange={(e) => setFormData({...formData, destino: e.target.value})}
+            required
           />
           <input 
-            type="number"
-            className="border w-full p-2 mb-3 rounded" 
+            className="border w-full p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500" 
             placeholder="Precio" 
+            type="number"
             value={formData.precio}
-            onChange={e => setFormData({...formData, precio: Number(e.target.value)})}
-            required 
+            onChange={(e) => setFormData({...formData, precio: e.target.value})}
+            required
           />
           <input 
-            className="border w-full p-2 mb-3 rounded" 
+            className="border w-full p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500" 
             placeholder="Duración" 
             value={formData.duracion}
-            onChange={e => setFormData({...formData, duracion: e.target.value})}
-            required 
+            onChange={(e) => setFormData({...formData, duracion: e.target.value})}
+            required
           />
           <input 
-            type="number"
-            className="border w-full p-2 mb-3 rounded" 
+            className="border w-full p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500" 
             placeholder="Cupos" 
+            type="number"
             value={formData.cupos}
-            onChange={e => setFormData({...formData, cupos: Number(e.target.value)})}
-            required 
+            onChange={(e) => setFormData({...formData, cupos: e.target.value})}
+            required
           />
-          <div className="flex justify-end gap-2 mt-4">
+          
+          <div className="flex justify-end gap-2 mt-6">
             <button 
               type="button" 
               onClick={onClose} 
@@ -110,7 +122,7 @@ const TourModal: React.FC<TourModalProps> = ({ isOpen, onClose, onRefresh, tourE
               type="submit" 
               className="bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-800"
             >
-              Guardar
+              {tourParaEditar ? 'Actualizar' : 'Guardar'}
             </button>
           </div>
         </form>
