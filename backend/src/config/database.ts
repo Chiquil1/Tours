@@ -1,18 +1,33 @@
-import mongoose from "mongoose";
+import { MongoClient, Db } from "mongodb";
 
-export const conectarDB = async () => {
+let db: Db;
+
+export const conectarDB = async (): Promise<void> => {
   try {
-    // Usamos MONGO_URI tal como está en el .env
     const uri = process.env.MONGO_URI;
-    
+
     if (!uri) {
       throw new Error("La variable MONGO_URI no está definida en el .env");
     }
 
-    await mongoose.connect(uri);
+    const cliente = new MongoClient(uri);
+
+    await cliente.connect();
+
+    db = cliente.db("estadias_db");
+
     console.log("✅ MongoDB conectado correctamente");
+    console.log("📦 Base de datos: estadias_db");
   } catch (error) {
-    console.error("❌ Error de conexión:", error);
-    process.exit(1); // Detiene el servidor si no hay conexión
+    console.error("❌ Error de conexión a MongoDB:", error);
+    process.exit(1);
   }
+};
+
+export const obtenerDB = (): Db => {
+  if (!db) {
+    throw new Error("La base de datos todavía no está conectada");
+  }
+
+  return db;
 };
